@@ -1,7 +1,18 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-  <rect x="2" y="7" width="20" height="10" rx="2" />
-  <line x1="6" y1="7" x2="6" y2="11" />
-  <line x1="10" y1="7" x2="10" y2="13" />
-  <line x1="14" y1="7" x2="14" y2="11" />
-  <line x1="18" y1="7" x2="18" y2="13" />
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="indigoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366f1" />
+      <stop offset="100%" stop-color="#4338ca" />
+    </linearGradient>
+  </defs>
+  <!-- Background with rounded corners matching the app's aesthetic -->
+  <rect width="512" height="512" rx="128" fill="url(#indigoGradient)" />
+  <!-- Ruler icon centered and in white -->
+  <g transform="translate(64, 64) scale(16)" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="2" y="7" width="20" height="10" rx="2" />
+    <line x1="6" y1="7" x2="6" y2="10" />
+    <line x1="10" y1="7" x2="10" y2="12" />
+    <line x1="14" y1="7" x2="14" y2="10" />
+    <line x1="18" y1="7" x2="18" y2="12" />
+  </g>
 </svg>

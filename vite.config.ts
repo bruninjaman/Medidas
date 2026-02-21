@@ -12,7 +12,7 @@ export default defineConfig(({ mode }) => {
       tailwindcss(),
       VitePWA({
         registerType: 'prompt', // Use prompt for update notifications
-        includeAssets: ['icon.svg', 'apple-touch-icon.png', 'favicon.ico'],
+        includeAssets: ['icon.svg'],
         manifest: {
           name: 'Medidas App - Peso e Medidas',
           short_name: 'Medidas',
