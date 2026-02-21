@@ -12,22 +12,34 @@ export default defineConfig(({ mode }) => {
       tailwindcss(),
       VitePWA({
         registerType: 'prompt', // Use prompt for update notifications
-        includeAssets: ['icon.svg'],
+        includeAssets: ['icon.svg', 'apple-touch-icon.png', 'favicon.ico'],
         manifest: {
-          name: 'Medidas App',
+          name: 'Medidas App - Peso e Medidas',
           short_name: 'Medidas',
-          description: 'Acompanhamento de medidas e peso corporal',
+          description: 'Acompanhamento de medidas e peso corporal com evolução inteligente',
           theme_color: '#4f46e5',
           background_color: '#f9fafb',
           display: 'standalone',
+          start_url: '/',
+          scope: '/',
+          orientation: 'portrait',
           icons: [
             {
               src: 'icon.svg',
-              sizes: 'any',
+              sizes: '512x512',
               type: 'image/svg+xml',
-              purpose: 'any maskable'
+              purpose: 'any'
+            },
+            {
+              src: 'icon.svg',
+              sizes: '512x512',
+              type: 'image/svg+xml',
+              purpose: 'maskable'
             }
           ]
+        },
+        devOptions: {
+          enabled: true
         }
       })
     ],
