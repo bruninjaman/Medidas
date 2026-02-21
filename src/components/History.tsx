@@ -1,0 +1,97 @@
+import React from 'react';
+import { Measurement } from '../types';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { Trash2 } from 'lucide-react';
+
+interface Props {
+  measurements: Measurement[];
+  onDelete: (id: string) => void;
+}
+
+export function History({ measurements, onDelete }: Props) {
+  if (measurements.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <span className="text-2xl">📊</span>
+        </div>
+        <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhuma medida salva</h3>
+        <p className="text-gray-500">Adicione sua primeira medida para acompanhar seu progresso.</p>
+      </div>
+    );
+  }
+
+  // Sort chronologically for the chart
+  const chartData = [...measurements].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()).map(m => ({
+    ...m,
+    formattedDate: format(new Date(m.date), 'dd/MM', { locale: ptBR })
+  }));
+
+  return (
+    <div className="space-y-8">
+      {measurements.length > 1 && (
+        <div className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100">
+          <h3 className="text-sm font-semibold text-gray-900 mb-6 uppercase tracking-wider">Evolução do Peso</h3>
+          <div className="h-48 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
+                <XAxis dataKey="formattedDate" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#9ca3af' }} dy={10} />
+                <YAxis domain={['dataMin - 2', 'dataMax + 2']} axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#9ca3af' }} />
+                <Tooltip 
+                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                  labelStyle={{ color: '#6b7280', marginBottom: '4px' }}
+                />
+                <Line type="monotone" dataKey="weight" name="Peso (kg)" stroke="#4f46e5" strokeWidth={3} dot={{ r: 4, fill: '#4f46e5', strokeWidth: 2, stroke: '#fff' }} activeDot={{ r: 6 }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
+
+      <div className="space-y-4">
+        <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider">Histórico Detalhado</h3>
+        <div className="space-y-3">
+          {measurements.map((m) => (
+            <div key={m.id} className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden group">
+              <div className="flex justify-between items-start mb-3">
+                <div>
+                  <p className="font-semibold text-gray-900 text-lg">{m.weight} <span className="text-sm font-normal text-gray-500">kg</span></p>
+                  <p className="text-xs text-gray-400">{format(new Date(m.date), "dd 'de' MMMM, yyyy", { locale: ptBR })}</p>
+                </div>
+                <button 
+                  onClick={() => {
+                    if (window.confirm('Tem certeza que deseja excluir esta medida?')) {
+                      onDelete(m.id);
+                    }
+                  }}
+                  className="text-gray-300 hover:text-red-500 transition-colors p-2 rounded-full hover:bg-red-50"
+                  title="Excluir medida"
+                >
+                  <Trash2 size={18} />
+                </button>
+              </div>
+              
+              {/* Optional Measurements Grid */}
+              {(m.chest || m.waist || m.hips || m.leftArm || m.rightArm || m.leftThigh || m.rightThigh || m.calves) && (
+                <div className="grid grid-cols-4 gap-2 mt-4 pt-4 border-t border-gray-50">
+                  {m.chest && <div className="text-center"><p className="text-[10px] text-gray-400 uppercase">Peito</p><p className="text-sm font-medium text-gray-700">{m.chest}</p></div>}
+                  {m.waist && <div className="text-center"><p className="text-[10px] text-gray-400 uppercase">Cintura</p><p className="text-sm font-medium text-gray-700">{m.waist}</p></div>}
+                  {m.hips && <div className="text-center"><p className="text-[10px] text-gray-400 uppercase">Quadril</p><p className="text-sm font-medium text-gray-700">{m.hips}</p></div>}
+                  {m.calves && <div className="text-center"><p className="text-[10px] text-gray-400 uppercase">Panturrilha</p><p className="text-sm font-medium text-gray-700">{m.calves}</p></div>}
+                  
+                  {m.leftArm && <div className="text-center"><p className="text-[10px] text-gray-400 uppercase">Br. Esq</p><p className="text-sm font-medium text-gray-700">{m.leftArm}</p></div>}
+                  {m.rightArm && <div className="text-center"><p className="text-[10px] text-gray-400 uppercase">Br. Dir</p><p className="text-sm font-medium text-gray-700">{m.rightArm}</p></div>}
+                  {m.leftThigh && <div className="text-center"><p className="text-[10px] text-gray-400 uppercase">Cx. Esq</p><p className="text-sm font-medium text-gray-700">{m.leftThigh}</p></div>}
+                  {m.rightThigh && <div className="text-center"><p className="text-[10px] text-gray-400 uppercase">Cx. Dir</p><p className="text-sm font-medium text-gray-700">{m.rightThigh}</p></div>}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}

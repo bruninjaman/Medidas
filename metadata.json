@@ -1,0 +1,5 @@
+{
+  "name": "Medidas",
+  "description": "Aplicativo para salvar medidas corporais, acompanhar peso e calcular Taxa Metabólica Basal (TMB).",
+  "requestFramePermissions": []
+}
