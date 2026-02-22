@@ -5,21 +5,25 @@ import { format } from 'date-fns';
 interface Props {
   onSave: (measurement: Omit<Measurement, 'id'>) => void;
   onCancel: () => void;
+  initialData?: Measurement;
 }
 
-export function MeasurementForm({ onSave, onCancel }: Props) {
-  const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'));
-  const [weight, setWeight] = useState<number | ''>('');
+export function MeasurementForm({ onSave, onCancel, initialData }: Props) {
+  // Use initialData.date if provided, otherwise default to current date
+  const [date, setDate] = useState(() =>
+    initialData ? format(new Date(initialData.date), 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd')
+  );
+  const [weight, setWeight] = useState<number | ''>(initialData?.weight || '');
 
   // Optional measurements
-  const [chest, setChest] = useState<number | ''>('');
-  const [waist, setWaist] = useState<number | ''>('');
-  const [hips, setHips] = useState<number | ''>('');
-  const [leftArm, setLeftArm] = useState<number | ''>('');
-  const [rightArm, setRightArm] = useState<number | ''>('');
-  const [leftThigh, setLeftThigh] = useState<number | ''>('');
-  const [rightThigh, setRightThigh] = useState<number | ''>('');
-  const [calves, setCalves] = useState<number | ''>('');
+  const [chest, setChest] = useState<number | ''>(initialData?.chest || '');
+  const [waist, setWaist] = useState<number | ''>(initialData?.waist || '');
+  const [hips, setHips] = useState<number | ''>(initialData?.hips || '');
+  const [leftArm, setLeftArm] = useState<number | ''>(initialData?.leftArm || '');
+  const [rightArm, setRightArm] = useState<number | ''>(initialData?.rightArm || '');
+  const [leftThigh, setLeftThigh] = useState<number | ''>(initialData?.leftThigh || '');
+  const [rightThigh, setRightThigh] = useState<number | ''>(initialData?.rightThigh || '');
+  const [calves, setCalves] = useState<number | ''>(initialData?.calves || '');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,15 +31,22 @@ export function MeasurementForm({ onSave, onCancel }: Props) {
       // Create date at the current local time to avoid timezone offset issues (e.g. 22/02 becoming 21/02)
       // and to ensure multiple measurements on the same day are sorted correctly
       const [year, month, day] = date.split('-');
-      const now = new Date();
-      const dateObj = new Date(
-        Number(year),
-        Number(month) - 1,
-        Number(day),
-        now.getHours(),
-        now.getMinutes(),
-        now.getSeconds()
-      );
+
+      let dateObj: Date;
+      if (initialData && date === format(new Date(initialData.date), 'yyyy-MM-dd')) {
+        // If editing and date hasn't changed, keep the exact original time
+        dateObj = new Date(initialData.date);
+      } else {
+        const now = new Date();
+        dateObj = new Date(
+          Number(year),
+          Number(month) - 1,
+          Number(day),
+          now.getHours(),
+          now.getMinutes(),
+          now.getSeconds()
+        );
+      }
 
       onSave({
         date: dateObj.toISOString(),
@@ -56,7 +67,7 @@ export function MeasurementForm({ onSave, onCancel }: Props) {
   return (
     <form onSubmit={handleSubmit} className="bg-white rounded-3xl shadow-xl border border-gray-100 flex flex-col max-h-[90vh] sm:max-h-[85vh]">
       <div className="flex justify-between items-center p-6 pb-2 border-b border-gray-50">
-        <h2 className="text-xl font-bold text-gray-900">Nova Medida</h2>
+        <h2 className="text-xl font-bold text-gray-900">{initialData ? 'Editar Medida' : 'Nova Medida'}</h2>
         <button type="button" onClick={onCancel} className="text-gray-400 hover:text-gray-600 p-2">
           ✕
         </button>

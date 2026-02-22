@@ -18,7 +18,7 @@ import ReloadPrompt from './components/ReloadPrompt';
 type View = 'dashboard' | 'history' | 'profile';
 
 export default function App() {
-  const { profile, saveProfile, measurements, addMeasurement, deleteMeasurement } = useAppStore();
+  const { profile, saveProfile, measurements, addMeasurement, updateMeasurement, deleteMeasurement } = useAppStore();
   const [view, setView] = useState<View>('dashboard');
   const [isAddingMeasurement, setIsAddingMeasurement] = useState(false);
 
@@ -126,7 +126,7 @@ export default function App() {
                 <button onClick={() => setView('dashboard')} className="text-gray-400">←</button>
                 <h2 className="text-2xl font-bold text-gray-900">Histórico</h2>
               </div>
-              <History measurements={measurements} onDelete={deleteMeasurement} />
+              <History measurements={measurements} onDelete={deleteMeasurement} onUpdate={updateMeasurement} />
             </motion.div>
           )}
 

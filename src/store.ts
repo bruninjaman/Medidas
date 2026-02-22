@@ -19,7 +19,7 @@ export function useAppStore() {
     setProfile(newProfile);
     localStorage.setItem(PROFILE_KEY, JSON.stringify(newProfile));
   };
-  
+
   const addMeasurement = (measurement: Omit<Measurement, 'id'>) => {
     const newMeasurement = { ...measurement, id: crypto.randomUUID() };
     const newMeasurements = [...measurements, newMeasurement].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
@@ -33,5 +33,12 @@ export function useAppStore() {
     localStorage.setItem(MEASUREMENTS_KEY, JSON.stringify(newMeasurements));
   };
 
-  return { profile, saveProfile, measurements, addMeasurement, deleteMeasurement };
+  const updateMeasurement = (id: string, measurement: Omit<Measurement, 'id'>) => {
+    const newMeasurements = measurements.map(m => m.id === id ? { ...measurement, id } : m);
+    newMeasurements.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    setMeasurements(newMeasurements);
+    localStorage.setItem(MEASUREMENTS_KEY, JSON.stringify(newMeasurements));
+  };
+
+  return { profile, saveProfile, measurements, addMeasurement, updateMeasurement, deleteMeasurement };
 }
