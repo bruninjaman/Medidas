@@ -10,7 +10,7 @@ interface Props {
 export function MeasurementForm({ onSave, onCancel }: Props) {
   const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [weight, setWeight] = useState<number | ''>('');
-  
+
   // Optional measurements
   const [chest, setChest] = useState<number | ''>('');
   const [waist, setWaist] = useState<number | ''>('');
@@ -24,8 +24,21 @@ export function MeasurementForm({ onSave, onCancel }: Props) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (weight && date) {
+      // Create date at the current local time to avoid timezone offset issues (e.g. 22/02 becoming 21/02)
+      // and to ensure multiple measurements on the same day are sorted correctly
+      const [year, month, day] = date.split('-');
+      const now = new Date();
+      const dateObj = new Date(
+        Number(year),
+        Number(month) - 1,
+        Number(day),
+        now.getHours(),
+        now.getMinutes(),
+        now.getSeconds()
+      );
+
       onSave({
-        date: new Date(date).toISOString(),
+        date: dateObj.toISOString(),
         weight: Number(weight),
         chest: chest ? Number(chest) : undefined,
         waist: waist ? Number(waist) : undefined,
@@ -77,7 +90,7 @@ export function MeasurementForm({ onSave, onCancel }: Props) {
 
         <div className="pt-4 border-t border-gray-100">
           <h3 className="text-xs font-semibold text-gray-400 mb-4 uppercase tracking-widest">Medidas Opcionais (cm)</h3>
-          
+
           <div className="grid grid-cols-2 gap-x-4 gap-y-3">
             <div>
               <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Peito</label>
@@ -95,7 +108,7 @@ export function MeasurementForm({ onSave, onCancel }: Props) {
               <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Panturrilhas</label>
               <input type="number" step="0.1" value={calves} onChange={(e) => setCalves(e.target.value ? Number(e.target.value) : '')} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
             </div>
-            
+
             <div className="col-span-2 grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Braço Esq.</label>
@@ -106,7 +119,7 @@ export function MeasurementForm({ onSave, onCancel }: Props) {
                 <input type="number" step="0.1" value={rightArm} onChange={(e) => setRightArm(e.target.value ? Number(e.target.value) : '')} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
               </div>
             </div>
-            
+
             <div className="col-span-2 grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Coxa Esq.</label>

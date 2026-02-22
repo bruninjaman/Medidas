@@ -24,10 +24,12 @@ export function History({ measurements, onDelete }: Props) {
   }
 
   // Sort chronologically for the chart
-  const chartData = [...measurements].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()).map(m => ({
-    ...m,
-    formattedDate: format(new Date(m.date), 'dd/MM', { locale: ptBR })
-  }));
+  const chartData = [...measurements]
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+    .map((m) => ({
+      ...m,
+      formattedDate: format(new Date(m.date), 'dd/MM', { locale: ptBR }),
+    }));
 
   return (
     <div className="space-y-8">
@@ -38,9 +40,17 @@ export function History({ measurements, onDelete }: Props) {
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
-                <XAxis dataKey="formattedDate" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#9ca3af' }} dy={10} />
+                <XAxis 
+                  dataKey="id" 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tickFormatter={(val, i) => chartData.find(d => d.id === val)?.formattedDate || ''}
+                  tick={{ fontSize: 12, fill: '#9ca3af' }} 
+                  dy={10} 
+                />
                 <YAxis domain={['dataMin - 2', 'dataMax + 2']} axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#9ca3af' }} />
                 <Tooltip 
+                  labelFormatter={(label) => chartData.find(d => d.id === label)?.formattedDate || ''}
                   contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                   labelStyle={{ color: '#6b7280', marginBottom: '4px' }}
                 />
