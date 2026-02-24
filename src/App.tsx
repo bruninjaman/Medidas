@@ -16,11 +16,31 @@ import ReloadPrompt from './components/ReloadPrompt';
 
 
 type View = 'dashboard' | 'history' | 'profile';
+const VIEWS: View[] = ['dashboard', 'history', 'profile'];
 
 export default function App() {
   const { profile, saveProfile, measurements, addMeasurement, updateMeasurement, deleteMeasurement } = useAppStore();
   const [view, setView] = useState<View>('dashboard');
   const [isAddingMeasurement, setIsAddingMeasurement] = useState(false);
+  const [direction, setDirection] = useState(0);
+
+  const handleSetView = (newView: View) => {
+    const currentIndex = VIEWS.indexOf(view);
+    const nextIndex = VIEWS.indexOf(newView);
+    if (currentIndex !== nextIndex) {
+      setDirection(nextIndex > currentIndex ? 1 : -1);
+      setView(newView);
+    }
+  };
+
+  const paginate = (newDirection: number) => {
+    const currentIndex = VIEWS.indexOf(view);
+    const nextIndex = currentIndex + newDirection;
+    if (nextIndex >= 0 && nextIndex < VIEWS.length) {
+      setDirection(newDirection);
+      setView(VIEWS[nextIndex]);
+    }
+  };
 
   // If no profile, force profile setup
   if (!profile) {
@@ -48,8 +68,28 @@ export default function App() {
 
   const latestMeasurement = measurements[0] || null;
 
+  const variants = {
+    enter: (direction: number) => ({
+      x: direction > 0 ? 100 : direction < 0 ? -100 : 0,
+      opacity: 0,
+    }),
+    center: {
+      x: 0,
+      opacity: 1,
+    },
+    exit: (direction: number) => ({
+      x: direction < 0 ? 100 : direction > 0 ? -100 : 0,
+      opacity: 0,
+    }),
+  };
+
+  const swipeConfidenceThreshold = 10000;
+  const swipePower = (offset: number, velocity: number) => {
+    return Math.abs(offset) * velocity;
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 pb-24">
+    <div className="min-h-screen bg-gray-50 pb-24 overflow-x-hidden">
       {/* Header */}
       <header className="bg-white border-b border-gray-100 sticky top-0 z-20">
         <div className="max-w-md mx-auto px-4 py-4 flex justify-between items-center">
@@ -66,7 +106,7 @@ export default function App() {
             <h1 className="text-xl font-bold text-gray-900 tracking-tight">Medidas</h1>
           </div>
           <button
-            onClick={() => setView('profile')}
+            onClick={() => handleSetView('profile')}
             className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-600 hover:bg-gray-100 transition-colors border border-gray-100"
           >
             <UserCircle size={24} />
@@ -75,91 +115,100 @@ export default function App() {
       </header>
 
       <main className="max-w-md mx-auto px-4 pt-6">
-        <AnimatePresence mode="wait">
-          {view === 'dashboard' && (
-            <motion.div
-              key="dashboard"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="space-y-6"
-            >
-              <Dashboard profile={profile} latestMeasurement={latestMeasurement} />
+        <AnimatePresence mode="popLayout" custom={direction} initial={false}>
+          <motion.div
+            key={view}
+            custom={direction}
+            variants={variants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{
+              x: { type: "spring", stiffness: 300, damping: 30 },
+              opacity: { duration: 0.2 }
+            }}
+            drag="x"
+            dragConstraints={{ left: 0, right: 0 }}
+            dragElastic={1}
+            onDragEnd={(_e, { offset, velocity }) => {
+              const swipe = swipePower(offset.x, velocity.x);
+              if (swipe < -swipeConfidenceThreshold) {
+                paginate(1);
+              } else if (swipe > swipeConfidenceThreshold) {
+                paginate(-1);
+              }
+            }}
+            className="w-full"
+          >
+            {view === 'dashboard' && (
+              <div className="space-y-6">
+                <Dashboard profile={profile} latestMeasurement={latestMeasurement} />
 
-              <div className="flex justify-between items-center pt-4">
-                <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider">Últimas Atividades</h3>
-                <button
-                  onClick={() => setView('history')}
-                  className="text-indigo-600 text-sm font-medium hover:underline"
-                >
-                  Ver tudo
-                </button>
-              </div>
+                <div className="flex justify-between items-center pt-4">
+                  <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider">Últimas Atividades</h3>
+                  <button
+                    onClick={() => handleSetView('history')}
+                    className="text-indigo-600 text-sm font-medium hover:underline"
+                  >
+                    Ver tudo
+                  </button>
+                </div>
 
-              <div className="space-y-3">
-                {measurements.slice(0, 3).map(m => (
-                  <div key={m.id} className="bg-white p-4 rounded-2xl border border-gray-100 flex justify-between items-center">
-                    <div>
-                      <p className="font-semibold text-gray-900">{m.weight} kg</p>
-                      <p className="text-xs text-gray-400">{new Date(m.date).toLocaleDateString('pt-BR')}</p>
+                <div className="space-y-3">
+                  {measurements.slice(0, 3).map(m => (
+                    <div key={m.id} className="bg-white p-4 rounded-2xl border border-gray-100 flex justify-between items-center">
+                      <div>
+                        <p className="font-semibold text-gray-900">{m.weight} kg</p>
+                        <p className="text-xs text-gray-400">{new Date(m.date).toLocaleDateString('pt-BR')}</p>
+                      </div>
+                      <div className="text-gray-300">→</div>
                     </div>
-                    <div className="text-gray-300">→</div>
-                  </div>
-                ))}
-                {measurements.length === 0 && (
-                  <div className="bg-dashed border-2 border-dashed border-gray-200 rounded-2xl p-8 text-center">
-                    <p className="text-gray-400 text-sm">Nenhum registro ainda.</p>
-                  </div>
-                )}
+                  ))}
+                  {measurements.length === 0 && (
+                    <div className="bg-dashed border-2 border-dashed border-gray-200 rounded-2xl p-8 text-center">
+                      <p className="text-gray-400 text-sm">Nenhum registro ainda.</p>
+                    </div>
+                  )}
+                </div>
               </div>
-            </motion.div>
-          )}
+            )}
 
-          {view === 'history' && (
-            <motion.div
-              key="history"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-            >
-              <div className="flex items-center gap-2 mb-6">
-                <button onClick={() => setView('dashboard')} className="text-gray-400">←</button>
-                <h2 className="text-2xl font-bold text-gray-900">Histórico</h2>
+            {view === 'history' && (
+              <div>
+                <div className="flex items-center gap-2 mb-6">
+                  <button onClick={() => handleSetView('dashboard')} className="text-gray-400">←</button>
+                  <h2 className="text-2xl font-bold text-gray-900">Histórico</h2>
+                </div>
+                <History measurements={measurements} onDelete={deleteMeasurement} onUpdate={updateMeasurement} />
               </div>
-              <History measurements={measurements} onDelete={deleteMeasurement} onUpdate={updateMeasurement} />
-            </motion.div>
-          )}
+            )}
 
-          {view === 'profile' && (
-            <motion.div
-              key="profile"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-            >
-              <div className="flex items-center gap-2 mb-6">
-                <button onClick={() => setView('dashboard')} className="text-gray-400">←</button>
-                <h2 className="text-2xl font-bold text-gray-900">Configurações</h2>
-              </div>
-              <ProfileForm initialProfile={profile} onSave={(p) => { saveProfile(p); setView('dashboard'); }} />
+            {view === 'profile' && (
+              <div>
+                <div className="flex items-center gap-2 mb-6">
+                  <button onClick={() => handleSetView('dashboard')} className="text-gray-400">←</button>
+                  <h2 className="text-2xl font-bold text-gray-900">Configurações</h2>
+                </div>
+                <ProfileForm initialProfile={profile} onSave={(p) => { saveProfile(p); handleSetView('dashboard'); }} />
 
-              <div className="mt-8 p-6 bg-red-50 rounded-2xl border border-red-100">
-                <h3 className="text-red-800 font-semibold mb-2">Zona de Perigo</h3>
-                <p className="text-red-600 text-sm mb-4">Isso apagará todos os seus dados permanentemente.</p>
-                <button
-                  onClick={() => {
-                    if (window.confirm('Apagar todos os dados?')) {
-                      localStorage.clear();
-                      window.location.reload();
-                    }
-                  }}
-                  className="bg-red-600 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-red-700 transition-colors"
-                >
-                  Redefinir Aplicativo
-                </button>
+                <div className="mt-8 p-6 bg-red-50 rounded-2xl border border-red-100">
+                  <h3 className="text-red-800 font-semibold mb-2">Zona de Perigo</h3>
+                  <p className="text-red-600 text-sm mb-4">Isso apagará todos os seus dados permanentemente.</p>
+                  <button
+                    onClick={() => {
+                      if (window.confirm('Apagar todos os dados?')) {
+                        localStorage.clear();
+                        window.location.reload();
+                      }
+                    }}
+                    className="bg-red-600 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-red-700 transition-colors"
+                  >
+                    Redefinir Aplicativo
+                  </button>
+                </div>
               </div>
-            </motion.div>
-          )}
+            )}
+          </motion.div>
         </AnimatePresence>
       </main>
 
@@ -175,21 +224,21 @@ export default function App() {
       <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-6 py-3 z-20">
         <div className="max-w-md mx-auto flex justify-around items-center">
           <button
-            onClick={() => setView('dashboard')}
+            onClick={() => handleSetView('dashboard')}
             className={`flex flex-col items-center gap-1 transition-colors ${view === 'dashboard' ? 'text-indigo-600' : 'text-gray-400'}`}
           >
             <LayoutDashboard size={24} />
             <span className="text-[10px] font-medium">Início</span>
           </button>
           <button
-            onClick={() => setView('history')}
+            onClick={() => handleSetView('history')}
             className={`flex flex-col items-center gap-1 transition-colors ${view === 'history' ? 'text-indigo-600' : 'text-gray-400'}`}
           >
             <HistoryIcon size={24} />
             <span className="text-[10px] font-medium">Histórico</span>
           </button>
           <button
-            onClick={() => setView('profile')}
+            onClick={() => handleSetView('profile')}
             className={`flex flex-col items-center gap-1 transition-colors ${view === 'profile' ? 'text-indigo-600' : 'text-gray-400'}`}
           >
             <Settings size={24} />
@@ -235,3 +284,4 @@ export default function App() {
     </div>
   );
 }
+
