@@ -9,10 +9,12 @@ import { ProfileForm } from './components/ProfileForm';
 import { Dashboard } from './components/Dashboard';
 import { MeasurementForm } from './components/MeasurementForm';
 import { History } from './components/History';
+import { NotificationSettingsPanel } from './components/NotificationSettings';
 import { Plus, History as HistoryIcon, LayoutDashboard, UserCircle, Settings } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { APP_VERSION } from './version';
 import ReloadPrompt from './components/ReloadPrompt';
+import { useNotifications } from './hooks/useNotifications';
 
 
 type View = 'dashboard' | 'history' | 'profile';
@@ -23,6 +25,7 @@ export default function App() {
   const [view, setView] = useState<View>('dashboard');
   const [isAddingMeasurement, setIsAddingMeasurement] = useState(false);
   const [direction, setDirection] = useState(0);
+  const notifications = useNotifications(measurements);
 
   const handleSetView = (newView: View) => {
     const currentIndex = VIEWS.indexOf(view);
@@ -190,6 +193,20 @@ export default function App() {
                   <h2 className="text-2xl font-bold text-gray-900">Configurações</h2>
                 </div>
                 <ProfileForm initialProfile={profile} onSave={(p) => { saveProfile(p); handleSetView('dashboard'); }} />
+
+                <div className="mt-6">
+                  <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-widest mb-3">Notificações</h3>
+                  <NotificationSettingsPanel
+                    settings={notifications.settings}
+                    permission={notifications.permission}
+                    hasWeightThisWeek={notifications.hasWeightThisWeek}
+                    hasMeasurementsInLastTwoWeeks={notifications.hasMeasurementsInLastTwoWeeks}
+                    onUpdateSettings={notifications.updateSettings}
+                    onEnable={notifications.enableNotifications}
+                    onDisable={notifications.disableNotifications}
+                    onTest={notifications.testNotification}
+                  />
+                </div>
 
                 <div className="mt-8 p-6 bg-red-50 rounded-2xl border border-red-100">
                   <h3 className="text-red-800 font-semibold mb-2">Zona de Perigo</h3>
