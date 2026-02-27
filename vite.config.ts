@@ -12,7 +12,7 @@ export default defineConfig(({ mode }) => {
       tailwindcss(),
       VitePWA({
         registerType: 'prompt', // Use prompt for update notifications
-        includeAssets: ['icon.svg'],
+        includeAssets: ['icon.svg', 'icon-512.png', 'badge.png'],
         manifest: {
           name: 'Medidas App - Peso e Medidas',
           short_name: 'Medidas',
@@ -31,9 +31,15 @@ export default defineConfig(({ mode }) => {
               purpose: 'any'
             },
             {
-              src: 'icon.svg',
+              src: 'icon-512.png',
               sizes: '512x512',
-              type: 'image/svg+xml',
+              type: 'image/png',
+              purpose: 'any'
+            },
+            {
+              src: 'icon-512.png',
+              sizes: '512x512',
+              type: 'image/png',
               purpose: 'maskable'
             }
           ]
