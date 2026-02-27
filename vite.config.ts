@@ -31,15 +31,9 @@ export default defineConfig(({ mode }) => {
               purpose: 'any'
             },
             {
-              src: 'icon-512.png',
+              src: 'icon.svg',
               sizes: '512x512',
-              type: 'image/png',
-              purpose: 'any'
-            },
-            {
-              src: 'icon-512.png',
-              sizes: '512x512',
-              type: 'image/png',
+              type: 'image/svg+xml',
               purpose: 'maskable'
             }
           ]

@@ -91,13 +91,13 @@ async function showNotification(title: string, body: string, tag: string) {
         const registration = await navigator.serviceWorker.ready;
         registration.showNotification(title, {
             body,
-            icon: '/icon-512.png',
+            icon: '/icon.svg',
             badge: '/badge.png',
             requireInteraction: true,
             data: { url: '/' },
         } as NotificationOptions);
     } else if ('Notification' in window) {
-        new Notification(title, { body, icon: '/icon-512.png' });
+        new Notification(title, { body, icon: '/icon.svg' });
     }
 }
 
