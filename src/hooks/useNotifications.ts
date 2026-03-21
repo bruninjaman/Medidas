@@ -159,15 +159,26 @@ export function useNotifications(measurements: Measurement[]) {
 
         const checkNotifications = () => {
             const now = new Date();
-            const currentDay = now.getDay();
-            const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
             const today = now.toDateString();
             const lastNotif = getLastNotification();
 
-            console.log(`[Medidas] Verificando lembretes: Hoje=${currentDay}, Hora=${currentTime}, ConfigPeso=${settings.weightReminderDay}@${settings.weightReminderTime}, ConfigMedida=${settings.measurementReminderDay}@${settings.measurementReminderTime}`);
+            const getReminderDate = (dayOfWk: number, timeStr: string) => {
+                const d = new Date(now);
+                const currentDay = d.getDay();
+                const diff = dayOfWk - currentDay;
+                d.setDate(d.getDate() + diff);
+                const [hours, minutes] = timeStr.split(':').map(Number);
+                d.setHours(hours, minutes, 0, 0);
+                return d;
+            };
 
-            // Check weight reminder
-            if (currentDay === settings.weightReminderDay && currentTime >= settings.weightReminderTime) {
+            const weightReminderDate = getReminderDate(settings.weightReminderDay, settings.weightReminderTime);
+            const measurementReminderDate = getReminderDate(settings.measurementReminderDay, settings.measurementReminderTime);
+
+            console.log(`[Medidas] Verificando lembretes: Agora=${now.toISOString()}`);
+
+            // Check weight reminder: if we are past the reminder time this week
+            if (now >= weightReminderDate) {
                 if (lastNotif.weight !== today && !hasWeightThisWeek(measurements)) {
                     console.log('[Medidas] Disparando lembrete de peso');
                     showNotification(
@@ -181,9 +192,7 @@ export function useNotifications(measurements: Measurement[]) {
             }
 
             // Check measurement reminders
-            if (currentDay === settings.measurementReminderDay && currentTime >= settings.measurementReminderTime) {
-                // If weight reminder was just sent, the lastNotif object in memory might be stale for deep properties
-                // but since we use separate keys and tags, it's fine.
+            if (now >= measurementReminderDate) {
                 if (lastNotif.measurement !== today && !hasMeasurementsInLastTwoWeeks(measurements)) {
                     console.log('[Medidas] Disparando lembrete de medidas');
                     showNotification(
@@ -200,10 +209,21 @@ export function useNotifications(measurements: Measurement[]) {
         // Check immediately
         checkNotifications();
 
+        // Check when user brings app to foreground
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible') {
+                checkNotifications();
+            }
+        };
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+
         // Check every minute
         const interval = setInterval(checkNotifications, 60 * 1000);
 
-        return () => clearInterval(interval);
+        return () => {
+            clearInterval(interval);
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+        };
     }, [settings, permission, measurements]);
 
     // Register periodic sync if available (for background notifications)
