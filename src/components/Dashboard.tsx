@@ -45,12 +45,7 @@ export function Dashboard({ profile, latestMeasurement }: Props) {
                 {tdeeGoal ? 'Definido por você' : 'Gasto total diário'}
               </p>
             </div>
-            {tdeeGoal && (
-               <div className="col-span-2 bg-white/5 rounded-xl p-2 px-3 flex justify-between items-center text-[10px] text-indigo-200">
-                  <span>TDEE Estimado: {Math.round(tdee!)} kcal</span>
-                  <span>Diferença: {Math.round(tdeeGoal - tdee!)} kcal</span>
-               </div>
-            )}
+
           </div>
         ) : (
           <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 text-center relative z-10">
