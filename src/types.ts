@@ -6,6 +6,8 @@ export interface UserProfile {
   gender: Gender;
   height: number; // in cm
   activityLevel: ActivityLevel;
+  manualBMR?: number;
+  tdeeGoal?: number;
 }
 
 export interface Measurement {

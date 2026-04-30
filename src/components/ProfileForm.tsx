@@ -12,6 +12,8 @@ export function ProfileForm({ initialProfile, onSave }: Props) {
   const [height, setHeight] = useState<number | ''>(initialProfile?.height || '');
   const [gender, setGender] = useState<Gender>(initialProfile?.gender || 'male');
   const [activityLevel, setActivityLevel] = useState<ActivityLevel>(initialProfile?.activityLevel || 'sedentary');
+  const [manualBMR, setManualBMR] = useState<number | ''>(initialProfile?.manualBMR || '');
+  const [tdeeGoal, setTdeeGoal] = useState<number | ''>(initialProfile?.tdeeGoal || '');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,7 +22,9 @@ export function ProfileForm({ initialProfile, onSave }: Props) {
         age: Number(age),
         height: Number(height),
         gender,
-        activityLevel
+        activityLevel,
+        manualBMR: manualBMR === '' ? undefined : Number(manualBMR),
+        tdeeGoal: tdeeGoal === '' ? undefined : Number(tdeeGoal)
       });
     }
   };
@@ -106,6 +110,34 @@ export function ProfileForm({ initialProfile, onSave }: Props) {
             <option key={value} value={value}>{label}</option>
           ))}
         </select>
+      </div>
+
+      <div className="border-t border-gray-100 pt-6 space-y-4">
+        <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider">Ajustes Avançados (Opcional)</h3>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Ajustar TMB Manual</label>
+            <input
+              type="number"
+              value={manualBMR}
+              onChange={(e) => setManualBMR(e.target.value ? Number(e.target.value) : '')}
+              className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+              placeholder="Ex: 1800"
+            />
+            <p className="text-[10px] text-gray-400 mt-1">Sobrescreve o cálculo automático.</p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Meta de TDEE</label>
+            <input
+              type="number"
+              value={tdeeGoal}
+              onChange={(e) => setTdeeGoal(e.target.value ? Number(e.target.value) : '')}
+              className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+              placeholder="Ex: 2500"
+            />
+            <p className="text-[10px] text-gray-400 mt-1">Sua meta calórica diária.</p>
+          </div>
+        </div>
       </div>
 
       <button

@@ -11,8 +11,9 @@ interface Props {
 export function Dashboard({ profile, latestMeasurement }: Props) {
   const weight = latestMeasurement?.weight;
   
-  const bmr = weight ? calculateBMR(profile, weight) : null;
+  const bmr = profile.manualBMR || (weight ? calculateBMR(profile, weight) : null);
   const tdee = bmr ? calculateTDEE(bmr, profile.activityLevel) : null;
+  const tdeeGoal = profile.tdeeGoal;
 
   return (
     <div className="space-y-6">
@@ -21,29 +22,39 @@ export function Dashboard({ profile, latestMeasurement }: Props) {
         <h2 className="text-xl font-medium mb-1 relative z-10">Resumo Diário</h2>
         <p className="text-indigo-100 text-sm mb-6 relative z-10">Baseado no seu último peso registrado</p>
         
-        {weight ? (
+        {bmr ? (
           <div className="grid grid-cols-2 gap-4 relative z-10">
             <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4">
               <div className="flex items-center gap-2 text-indigo-100 mb-2">
                 <Flame size={18} />
                 <span className="text-sm font-medium">TMB</span>
               </div>
-              <div className="text-2xl font-bold">{Math.round(bmr!)} <span className="text-sm font-normal text-indigo-200">kcal</span></div>
-              <p className="text-xs text-indigo-200 mt-1">Gasto em repouso</p>
+              <div className="text-2xl font-bold">{Math.round(bmr)} <span className="text-sm font-normal text-indigo-200">kcal</span></div>
+              <p className="text-xs text-indigo-200 mt-1">
+                {profile.manualBMR ? 'Valor manual' : 'Gasto em repouso'}
+              </p>
             </div>
             
             <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4">
               <div className="flex items-center gap-2 text-indigo-100 mb-2">
-                <Activity size={18} />
-                <span className="text-sm font-medium">TDEE</span>
+                {tdeeGoal ? <Flame size={18} className="text-yellow-300" /> : <Activity size={18} />}
+                <span className="text-sm font-medium">{tdeeGoal ? 'Meta TDEE' : 'TDEE'}</span>
               </div>
-              <div className="text-2xl font-bold">{Math.round(tdee!)} <span className="text-sm font-normal text-indigo-200">kcal</span></div>
-              <p className="text-xs text-indigo-200 mt-1">Gasto total diário</p>
+              <div className="text-2xl font-bold">{Math.round(tdeeGoal || tdee!)} <span className="text-sm font-normal text-indigo-200">kcal</span></div>
+              <p className="text-xs text-indigo-200 mt-1">
+                {tdeeGoal ? 'Definido por você' : 'Gasto total diário'}
+              </p>
             </div>
+            {tdeeGoal && (
+               <div className="col-span-2 bg-white/5 rounded-xl p-2 px-3 flex justify-between items-center text-[10px] text-indigo-200">
+                  <span>TDEE Estimado: {Math.round(tdee!)} kcal</span>
+                  <span>Diferença: {Math.round(tdeeGoal - tdee!)} kcal</span>
+               </div>
+            )}
           </div>
         ) : (
           <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 text-center relative z-10">
-            <p className="text-indigo-100">Adicione seu primeiro peso para calcular a TMB.</p>
+            <p className="text-indigo-100">Adicione seu primeiro peso ou ajuste a TMB manualmente.</p>
           </div>
         )}
       </div>
