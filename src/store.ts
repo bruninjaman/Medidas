@@ -40,5 +40,38 @@ export function useAppStore() {
     localStorage.setItem(MEASUREMENTS_KEY, JSON.stringify(newMeasurements));
   };
 
-  return { profile, saveProfile, measurements, addMeasurement, updateMeasurement, deleteMeasurement };
+  const exportData = () => {
+    const data = {
+      profile,
+      measurements,
+      version: 1,
+      exportedAt: new Date().toISOString()
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `medidas-save-${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const importData = (jsonData: string) => {
+    try {
+      const data = JSON.parse(jsonData);
+      if (data.profile) {
+        saveProfile(data.profile);
+      }
+      if (Array.isArray(data.measurements)) {
+        setMeasurements(data.measurements);
+        localStorage.setItem(MEASUREMENTS_KEY, JSON.stringify(data.measurements));
+      }
+      return true;
+    } catch (e) {
+      console.error('Error importing data:', e);
+      return false;
+    }
+  };
+
+  return { profile, saveProfile, measurements, addMeasurement, updateMeasurement, deleteMeasurement, exportData, importData };
 }

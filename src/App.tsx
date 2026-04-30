@@ -10,7 +10,7 @@ import { Dashboard } from './components/Dashboard';
 import { MeasurementForm } from './components/MeasurementForm';
 import { History } from './components/History';
 import { NotificationSettingsPanel } from './components/NotificationSettings';
-import { Plus, History as HistoryIcon, LayoutDashboard, UserCircle, Settings } from 'lucide-react';
+import { Plus, History as HistoryIcon, LayoutDashboard, UserCircle, Settings, Download, Upload } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { APP_VERSION } from './version';
 import ReloadPrompt from './components/ReloadPrompt';
@@ -21,7 +21,7 @@ type View = 'dashboard' | 'history' | 'profile';
 const VIEWS: View[] = ['dashboard', 'history', 'profile'];
 
 export default function App() {
-  const { profile, saveProfile, measurements, addMeasurement, updateMeasurement, deleteMeasurement } = useAppStore();
+  const { profile, saveProfile, measurements, addMeasurement, updateMeasurement, deleteMeasurement, exportData, importData } = useAppStore();
   const [view, setView] = useState<View>('dashboard');
   const [isAddingMeasurement, setIsAddingMeasurement] = useState(false);
   const [direction, setDirection] = useState(0);
@@ -193,6 +193,44 @@ export default function App() {
                   <h2 className="text-2xl font-bold text-gray-900">Configurações</h2>
                 </div>
                 <ProfileForm initialProfile={profile} onSave={(p) => { saveProfile(p); handleSetView('dashboard'); }} />
+
+                <div className="mt-6">
+                  <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-widest mb-3">Backup de Dados</h3>
+                  <div className="bg-white p-4 rounded-2xl border border-gray-100 grid grid-cols-2 gap-3">
+                    <button
+                      onClick={exportData}
+                      className="flex items-center justify-center gap-2 px-4 py-3 bg-gray-50 text-gray-700 rounded-xl hover:bg-gray-100 transition-colors border border-gray-100 font-medium text-sm"
+                    >
+                      <Download size={18} />
+                      Exportar
+                    </button>
+                    <label className="flex items-center justify-center gap-2 px-4 py-3 bg-gray-50 text-gray-700 rounded-xl hover:bg-gray-100 transition-colors border border-gray-100 font-medium text-sm cursor-pointer">
+                      <Upload size={18} />
+                      Importar
+                      <input
+                        type="file"
+                        accept=".json"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onload = (event) => {
+                              const content = event.target?.result as string;
+                              if (importData(content)) {
+                                alert('Dados importados com sucesso!');
+                                window.location.reload();
+                              } else {
+                                alert('Erro ao importar dados. Verifique o arquivo.');
+                              }
+                            };
+                            reader.readAsText(file);
+                          }
+                        }}
+                      />
+                    </label>
+                  </div>
+                </div>
 
                 <div className="mt-6">
                   <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-widest mb-3">Notificações</h3>
