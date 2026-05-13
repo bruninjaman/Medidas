@@ -1,5 +1,6 @@
 import { Bell, BellOff, BellRing, Check, AlertTriangle } from 'lucide-react';
 import { NotificationSettings as NotificationSettingsType } from '../hooks/useNotifications';
+import { Capacitor } from '@capacitor/core';
 
 const DAYS_OF_WEEK = [
     { value: 0, label: 'Dom' },
@@ -49,7 +50,7 @@ export function NotificationSettingsPanel({
         onUpdateSettings({ ...settings, measurementReminderDay: day });
     };
 
-    const isNotificationSupported = 'Notification' in window;
+    const isNotificationSupported = 'Notification' in window || Capacitor.isNativePlatform();
 
     return (
         <div className="space-y-4">
@@ -94,7 +95,11 @@ export function NotificationSettingsPanel({
                 {permission === 'denied' && isNotificationSupported && (
                     <div className="mt-3 flex items-center gap-2 text-red-700 bg-red-50 p-3 rounded-xl text-xs">
                         <AlertTriangle size={16} />
-                        <span>Permissão negada. Ative notificações nas configurações do navegador.</span>
+                        <span>
+                            {Capacitor.isNativePlatform()
+                                ? 'Permissão negada. Ative as notificações nas configurações do seu celular.'
+                                : 'Permissão negada. Ative as notificações nas configurações do navegador.'}
+                        </span>
                     </div>
                 )}
 

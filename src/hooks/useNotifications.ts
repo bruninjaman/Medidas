@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Measurement } from '../types';
+import { Capacitor } from '@capacitor/core';
+import { LocalNotifications } from '@capacitor/local-notifications';
 
 // Keys for localStorage
 const NOTIFICATION_SETTINGS_KEY = 'medidas_notification_settings';
@@ -87,6 +89,21 @@ function hasWeightThisWeek(measurements: Measurement[]): boolean {
 }
 
 async function showNotification(title: string, body: string, tag: string) {
+    if (Capacitor.isNativePlatform()) {
+        await LocalNotifications.schedule({
+            notifications: [
+                {
+                    title,
+                    body,
+                    id: Math.floor(Math.random() * 1000000),
+                    schedule: { at: new Date(Date.now() + 1000) },
+                    channelId: 'medidas-reminders'
+                }
+            ]
+        });
+        return;
+    }
+
     if ('serviceWorker' in navigator) {
         const registration = await navigator.serviceWorker.ready;
         registration.showNotification(title, {
@@ -103,9 +120,42 @@ async function showNotification(title: string, body: string, tag: string) {
 
 export function useNotifications(measurements: Measurement[]) {
     const [settings, setSettings] = useState<NotificationSettings>(getSettings);
-    const [permission, setPermission] = useState<NotificationPermission>(
-        'Notification' in window ? Notification.permission : 'denied'
-    );
+    const [permission, setPermission] = useState<NotificationPermission>(() => {
+        if (Capacitor.isNativePlatform()) {
+            return 'default';
+        }
+        return 'Notification' in window ? Notification.permission : 'denied';
+    });
+
+    // Create channel and sync permissions on mount for Native Platforms
+    useEffect(() => {
+        const syncNativeAndPermission = async () => {
+            if (Capacitor.isNativePlatform()) {
+                try {
+                    // Create high-priority notification channel for Android
+                    await LocalNotifications.createChannel({
+                        id: 'medidas-reminders',
+                        name: 'Lembretes de Medidas',
+                        description: 'Notificações de lembrete para registrar peso e medidas corporais',
+                        importance: 5,
+                        visibility: 1,
+                        vibration: true,
+                        lights: true,
+                    });
+
+                    const status = await LocalNotifications.checkPermissions();
+                    const result = status.display === 'granted' ? 'granted' : 
+                                   status.display === 'denied' ? 'denied' : 'default';
+                    setPermission(result as NotificationPermission);
+                } catch (e) {
+                    console.error('Error syncing native permissions/channels:', e);
+                }
+            } else if ('Notification' in window) {
+                setPermission(Notification.permission);
+            }
+        };
+        syncNativeAndPermission();
+    }, []);
 
     // Save settings when they change
     const updateSettings = useCallback((newSettings: NotificationSettings) => {
@@ -115,6 +165,13 @@ export function useNotifications(measurements: Measurement[]) {
 
     // Request notification permission
     const requestPermission = useCallback(async () => {
+        if (Capacitor.isNativePlatform()) {
+            const permStatus = await LocalNotifications.requestPermissions();
+            const result = permStatus.display === 'granted' ? 'granted' : 'denied';
+            setPermission(result as NotificationPermission);
+            return result as NotificationPermission;
+        }
+
         if (!('Notification' in window)) {
             return 'denied' as NotificationPermission;
         }
@@ -245,6 +302,51 @@ export function useNotifications(measurements: Measurement[]) {
 
         registerPeriodicSync();
     }, [settings.enabled, permission]);
+
+    // Schedule native notifications
+    useEffect(() => {
+        const scheduleNative = async () => {
+            if (!Capacitor.isNativePlatform()) return;
+            
+            const pending = await LocalNotifications.getPending();
+            if (pending.notifications.length > 0) {
+                await LocalNotifications.cancel(pending);
+            }
+            
+            if (!settings.enabled || permission !== 'granted') return;
+            
+            const notifications = [];
+            
+            if (!hasWeightThisWeek(measurements)) {
+                const [wHour, wMin] = settings.weightReminderTime.split(':').map(Number);
+                const wDay = settings.weightReminderDay + 1; // Capacitor: 1=Sunday, 2=Monday
+                notifications.push({
+                    title: '⚖️ Hora de pesar!',
+                    body: 'Você ainda não registrou seu peso esta semana. Que tal medir agora?',
+                    id: 1,
+                    schedule: { every: 'week', on: { weekday: wDay, hour: wHour, minute: wMin } },
+                    channelId: 'medidas-reminders'
+                });
+            }
+            
+            if (!hasMeasurementsInLastTwoWeeks(measurements)) {
+                const [mHour, mMin] = settings.measurementReminderTime.split(':').map(Number);
+                const mDay = settings.measurementReminderDay + 1;
+                notifications.push({
+                    title: '📏 Hora das medidas!',
+                    body: 'Você não registrou suas medidas corporais nas últimas 2 semanas. Que tal registrar agora?',
+                    id: 2,
+                    schedule: { every: 'week', on: { weekday: mDay, hour: mHour, minute: mMin } },
+                    channelId: 'medidas-reminders'
+                });
+            }
+            
+            if (notifications.length > 0) {
+                await LocalNotifications.schedule({ notifications });
+            }
+        };
+        scheduleNative();
+    }, [settings, permission, measurements]);
 
     return {
         settings,
