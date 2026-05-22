@@ -92,7 +92,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-24 overflow-x-hidden">
+    <div className="min-h-screen bg-gray-50 overflow-x-hidden" style={{ paddingBottom: 'calc(96px + env(safe-area-inset-bottom))' }}>
       {/* Header */}
       <header className="bg-white border-b border-gray-100 sticky top-0 z-20">
         <div className="max-w-md mx-auto px-4 py-4 flex justify-between items-center">
@@ -270,13 +270,17 @@ export default function App() {
       {/* Floating Action Button */}
       <button
         onClick={() => setIsAddingMeasurement(true)}
-        className="fixed bottom-24 right-6 w-14 h-14 bg-indigo-600 text-white rounded-full shadow-xl flex items-center justify-center hover:bg-indigo-700 transition-all hover:scale-110 active:scale-95 z-30"
+        style={{ bottom: 'calc(96px + env(safe-area-inset-bottom))' }}
+        className="fixed right-6 w-14 h-14 bg-indigo-600 text-white rounded-full shadow-xl flex items-center justify-center hover:bg-indigo-700 transition-all hover:scale-110 active:scale-95 z-30"
       >
         <Plus size={28} />
       </button>
 
       {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-6 py-3 z-20">
+      <nav 
+        style={{ paddingBottom: 'calc(12px + env(safe-area-inset-bottom))', paddingTop: '12px' }}
+        className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-6 z-20"
+      >
         <div className="max-w-md mx-auto flex justify-around items-center">
           <button
             onClick={() => handleSetView('dashboard')}
@@ -303,8 +307,11 @@ export default function App() {
       </nav>
 
       {/* Version Display */}
-      <div className="fixed bottom-0 left-0 right-0 flex justify-center pb-1 pointer-events-none z-10">
-        <span className="text-[8px] text-gray-300 font-mono">v{APP_VERSION}</span>
+      <div 
+        style={{ bottom: 'calc(2px + env(safe-area-inset-bottom))' }}
+        className="fixed left-0 right-0 flex justify-center pointer-events-none z-30"
+      >
+        <span className="text-[8px] text-gray-400 font-mono">v{APP_VERSION}</span>
       </div>
 
       <ReloadPrompt />
