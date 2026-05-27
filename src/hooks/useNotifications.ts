@@ -324,7 +324,7 @@ export function useNotifications(measurements: Measurement[]) {
                     title: '⚖️ Hora de pesar!',
                     body: 'Você ainda não registrou seu peso esta semana. Que tal medir agora?',
                     id: 1,
-                    schedule: { every: 'week', on: { weekday: wDay, hour: wHour, minute: wMin } },
+                    schedule: { on: { weekday: wDay, hour: wHour, minute: wMin }, allowWhileIdle: true },
                     channelId: 'medidas-reminders'
                 });
             }
@@ -336,13 +336,17 @@ export function useNotifications(measurements: Measurement[]) {
                     title: '📏 Hora das medidas!',
                     body: 'Você não registrou suas medidas corporais nas últimas 2 semanas. Que tal registrar agora?',
                     id: 2,
-                    schedule: { every: 'week', on: { weekday: mDay, hour: mHour, minute: mMin } },
+                    schedule: { on: { weekday: mDay, hour: mHour, minute: mMin }, allowWhileIdle: true },
                     channelId: 'medidas-reminders'
                 });
             }
             
             if (notifications.length > 0) {
-                await LocalNotifications.schedule({ notifications });
+                try {
+                    await LocalNotifications.schedule({ notifications });
+                } catch (error) {
+                    console.error('Failed to schedule local notifications:', error);
+                }
             }
         };
         scheduleNative();
